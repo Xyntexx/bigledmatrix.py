@@ -51,8 +51,9 @@ class LedMatrixMockup:
                         img = np.unpackbits(np.array([self.array1], dtype=np.uint8), axis=0, bitorder='little')
                         # replace last 8 rows with the new img:
                         self.img[8:16, :] = img * 255
-                    imS = cv2.resize(self.img, (w * scale, h * scale), interpolation=cv2.INTER_AREA)  # Resize image
-                    self.imS = np.pad(imS, pad_width=10, mode='constant', constant_values=100)
+                    im_s = cv2.resize(self.img, (w * scale, h * scale), interpolation=cv2.INTER_AREA)  # Resize image
+                    im_s = np.fliplr(im_s)
+                    self.imS = np.pad(im_s, pad_width=10, mode='constant', constant_values=100)
                     self.escape = False
                     continue
                 elif i == ord('0'):

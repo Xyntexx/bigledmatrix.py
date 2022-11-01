@@ -243,9 +243,9 @@ class Font(object):
 if __name__ == '__main__':
     # Be sure to place 'helvetica.ttf' (or any other ttf / otf font file) in the working directory.
     for i in range(0, 40):
-        fnt = Font(r'victor-pixel.ttf', i)
+        fnt = Font(r'C:\Windows\Fonts\arial.ttf', i)
 
         # Multiple characters
-        txt = fnt.render_text('SPINNI')
+        txt = fnt.render_text('SPINNIjk,,asd,qpp1230+0213asd')
         print(repr(txt))
         print(f"i={i}, h={txt.height}, w={txt.width}")
