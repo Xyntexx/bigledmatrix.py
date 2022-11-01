@@ -1,98 +1,81 @@
+from time import sleep
+import faulthandler
+
+from led_effects import LedEffects
+
+faulthandler.enable()
 import numpy as np
-from Tools.scripts.generate_re_casefix import hexint
+from led_mockup_opencv import LedMatrixMockup
+from led_controller import LedController
+from text_to_array import Font
+
+interface = LedMatrixMockup()
+led_controller = LedController(interface)
+led_effects = LedEffects(interface)
+H = led_controller.H
+W = led_controller.W
+
+pixel_font_small = Font(r'C:\Windows\Fonts\arial.ttf', 10)
+pixel_font_big = Font(r'victor-pixel.ttf', 24)
 
 
-class pygame:
-    pass
+def min_height(matrix, size):
+    if matrix.shape[0] < size:
+        return np.concatenate((matrix, np.zeros((size - matrix.shape[0], matrix.shape[1]), dtype=bool)), axis=0)
+    else:
+        return matrix
 
 
-class ImageFont:
-    pass
+spinni = np.array(pixel_font_small.render_text('SPINNI'))
+print(spinni.shape)
+you = np.array(pixel_font_small.render_text('YOU'))
+
+spinni = min_height(spinni, 8)
+you = min_height(you, 8)
+
+# 8x8 pixel matrix of a heart:
+heart = np.unpackbits(np.array([[0b00000000,
+                                 0b01100110,
+                                 0b11111111,
+                                 0b11111111,
+                                 0b01111110,
+                                 0b00111100,
+                                 0b00011000,
+                                 0b00000000]], dtype=np.uint8), axis=0).T
+
+test_matrix1 = np.array([[(i % 2) ^ (j % 2) for i in range(H)] for j in range(80)]).transpose()
+test_matrix2 = np.array([[0 if ((i % 2) ^ (j % 2)) else 1 for i in range(H)] for j in range(W)]).transpose()
 
 
-class Image:
-    pass
+def spinni_loves_you(speed=100):
+    # Combine spinni on firt line and heart and you on second line:
 
+    line1 = np.concatenate((spinni, heart, you), axis=1)
 
-class ImageDraw:
-    pass
-
-
-h = 16
-w = 72
-
-test_matrix1 = np.array([[(i % 2) ^ (j % 2) for i in range(h)] for j in range(w)]).transpose()
-test_matrix2 = np.array([[0 if ((i % 2) ^ (j % 2)) else 1 for i in range(h)] for j in range(w)]).transpose()
-
-
-def print_matrix(matrix):
-    for j in range(h):
-        for i in range(w):
-            print(matrix[j][i], end=" ")
-        print()
-
-
-class LedMatrixMockup:
-    def __init__(self):
-        self.array = pygame.PixelArray()
-
-    def write(self, data):
-        k = 0
-
-        for i in range(w):
-            for j in range(h):
-                self.array[i, j] = pygame.Color(255, 0, 255) if data[k] else pygame.Color(0, 0, 0)
-                k += 1
-
-
-chars = {tuple(map(int, f"{n:08b}")): n for n in range(256)}
-
-
-def toChars(bits):
-    return bytes(chars[b] for b in zip(*(bits[7 - i::8] for i in range(8)))).decode()
-
-
-def matrix_to_char(array):
-    output = ""
-    array1 = array[0:8, :]
-    array2 = array[8:16, :]
-
-    hexarray1 = np.packbits(array1, axis=0, bitorder='little')
-    hexarray2 = np.packbits(array2, axis=0, bitorder='little')
-
-    hexarray_joined = np.concatenate((hexarray1, hexarray2), axis=1)
-    print(hexarray_joined)
-
-    return output
-
-
-def char_to_pixels(text, path='arialbd.ttf', fontsize=14):
-    """
-    Based on https://stackoverflow.com/a/27753869/190597 (jsheperd)
-    """
-    font = ImageFont.truetype(path, fontsize)
-    w, h = font.getsize(text)
-    h *= 2
-    image = Image.new('L', (w, h), 1)
-    draw = ImageDraw.Draw(image)
-    draw.text((0, 0), text, font=font)
-    arr = np.asarray(image)
-    arr = np.where(arr, 0, 1)
-    arr = arr[(arr != 0).any(axis=1)]
-    return arr
-
-
-def spinni_loves_you():
-    pass
+    matrix = np.concatenate((line1, line1), axis=0)
+    led_effects.scrollMatrix(matrix, speed, False)
 
 
 def main():
-    print_matrix(test_matrix1)
-    print()
-    print_matrix(test_matrix2)
-    var1 = matrix_to_char(test_matrix1)
-    print(var1)
+    while True:
+        spinni_loves_you()
+        sleep(1)
+        led_effects.scroll_out_up(100)
+        sleep(1)
+        led_effects.scrollMatrix(test_matrix1, 20, False)
+        sleep(1)
+        led_effects.scroll_out_up(10)
+        sleep(1)
+        led_effects.scroll_in_from_below(test_matrix2, 20)
+        sleep(1)
+        led_effects.scroll_out_left(10)
+        sleep(1)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        interface.stop()
+
+
