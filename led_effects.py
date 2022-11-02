@@ -86,3 +86,22 @@ class LedEffects:
             self.led_controller.write_full(
                 np.concatenate((np.zeros((self.H - i, self.W), dtype=bool), matrix[0:i, :]), axis=0))
             sleep(1 / speed)
+            
+    def set_partial(self, matrix, row=0):
+        h, w = matrix.shape
+
+        if w < self.W:
+            matrix = np.concatenate(
+                (np.zeros((h, int((self.W - w) / 2)), dtype=bool), matrix,
+                 np.zeros((h, self.W - w - int((self.W - w) / 2)), dtype=bool)),
+                axis=1)
+
+        if h < 8:
+            matrix = np.concatenate(
+                (matrix, np.zeros((8-h, self.W), dtype=bool)), axis=0
+            )
+
+        if row == 0:
+            self.led_controller.write_upper(matrix)
+        else:
+            self.led_controller.write_lower(matrix)
