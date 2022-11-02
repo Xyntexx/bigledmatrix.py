@@ -7,6 +7,29 @@ import numpy as np
 from led_controller import LedController
 
 
+def center_to_full_width(matrix, full_width):
+    """
+    Take a matrix that's up to `width` columns wide and
+    add spacing to the sides to fill up `width`
+    """
+    h, w = matrix.shape
+    if w < full_width:
+        matrix = np.concatenate(
+            (np.zeros((h, int((full_width - w) / 2)), dtype=bool), matrix,
+             np.zeros((h, full_width - w - int((full_width - w) / 2)), dtype=bool)),
+            axis=1)
+    return matrix
+
+
+def expand_to_full_height(matrix, full_height):
+    h, w = matrix.shape
+    if h < full_height:
+        matrix = np.concatenate(
+            (matrix, np.zeros((8 - h, w), dtype=bool)), axis=0
+        )
+    return matrix
+
+
 class LedEffects:
     def __init__(self, interface, mirror=False):
         self.interface = interface
@@ -72,36 +95,22 @@ class LedEffects:
             sleep(1 / speed)
 
     def scroll_in_from_below(self, matrix, speed=100):
-        if matrix.shape[0] > 72:
-            raise Exception("Matrix must be 72 wide for this effect")
-        w = matrix.shape[1]
-        # if matrix is narrower than the led matrix, add zeros to the left and right:
-        if w < self.W:
-            matrix = np.concatenate(
-                (np.zeros((self.H, int((self.W - w) / 2)), dtype=bool), matrix,
-                 np.zeros((self.H, self.W - w - int((self.W - w) / 2)), dtype=bool)),
-                axis=1)
+        if matrix.shape[1] > 72:
+            raise Exception("Matrix must be maximum of 72 wide for this effect")
+        matrix = center_to_full_width(matrix, self.W)
+
         # scroll in from the bottom:
         for i in range(self.H + 1):
             self.led_controller.write_full(
                 np.concatenate((np.zeros((self.H - i, self.W), dtype=bool), matrix[0:i, :]), axis=0))
             sleep(1 / speed)
-            
+
     def set_partial(self, matrix, row=0):
-        h, w = matrix.shape
-
-        if w < self.W:
-            matrix = np.concatenate(
-                (np.zeros((h, int((self.W - w) / 2)), dtype=bool), matrix,
-                 np.zeros((h, self.W - w - int((self.W - w) / 2)), dtype=bool)),
-                axis=1)
-
-        if h < 8:
-            matrix = np.concatenate(
-                (matrix, np.zeros((8-h, self.W), dtype=bool)), axis=0
-            )
+        matrix = center_to_full_width(matrix, self.W)
+        matrix = expand_to_full_height(matrix, 8)
 
         if row == 0:
             self.led_controller.write_upper(matrix)
         else:
             self.led_controller.write_lower(matrix)
+
