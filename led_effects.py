@@ -74,7 +74,7 @@ class LedEffects:
                 sleep(1 / speed)
             # then scroll out to the left:
             if scroll_out:
-                for i in range(1, self.W):
+                for i in range(1, self.W+1):
                     output_function(
                         np.concatenate((matrix[:, mw - self.W + i:], np.zeros((h, i), dtype=bool)), axis=1))
                     sleep(1 / speed)
