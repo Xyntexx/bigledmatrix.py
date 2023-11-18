@@ -2,7 +2,7 @@ from time import sleep
 from led_effects import LedEffects
 import numpy as np
 from led_mockup_opencv import LedMatrixMockup
-from text_to_array import Font
+from pixel_font import Font
 from usb_interface import SerialInterface
 
 #interface = LedMatrixMockup()
